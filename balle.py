@@ -44,9 +44,17 @@ class Balle:
             self.vy = -self.vy
 
     def rebondit_sur_raquette(self, raquette):
-        if self.y + RAYON_BALLE > raquette.y and self.y < raquette.y + HAUTEUR_RAQUETTE:
-            if self.x > raquette.x and self.x < raquette.x + LARGEUR_RAQUETTE:
+        if raquette.x < self.x < raquette.x + LARGEUR_RAQUETTE:
+            if (raquette.y < self.y - RAYON_BALLE < raquette.y + HAUTEUR_RAQUETTE):
                 self.vy = -self.vy
+
+        # Collision sur le coin
+        elif raquette.y < self.y < raquette.y + HAUTEUR_RAQUETTE:
+            if (raquette.x < self.x + RAYON_BALLE < raquette.x + LARGEUR_RAQUETTE) or (raquette.x < self.x - RAYON_BALLE < raquette.x + LARGEUR_RAQUETTE):
+                self.vx = -self.vx
+                self.vy = -self.vy
+
+
 
     def est_sortie(self):
         return self.y > HAUTEUR_FENETRE
