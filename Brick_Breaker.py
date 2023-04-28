@@ -13,8 +13,8 @@ BLEU = (0, 0, 255)
 ROUGE = (255, 0, 0)
 VERT = (0, 255, 0)
 JAUNE = (255, 255, 0)
-vx = 0.5
-vy= 0.5
+vx = 0.3
+vy= 0.3
 
 # Taille de la fenêtre
 LARGEUR_FENETRE = 500
@@ -55,8 +55,9 @@ def jeu():
         pygame.time.wait(1000)
         temps_restant -= 1
 
-    # Création de la balle
-    balle = Balle(LARGEUR_FENETRE / 2, HAUTEUR_FENETRE / 2,vx,vy)
+    # Création de la première balle
+    balle_ini = Balle(LARGEUR_FENETRE / 2, HAUTEUR_FENETRE / 2, 0.5, 0.5)
+    liste_balles = [balle_ini]
 
     # Création de la raquette
     raquette = Raquette(LARGEUR_FENETRE / 2 - LARGEUR_RAQUETTE / 2, HAUTEUR_FENETRE - HAUTEUR_RAQUETTE - 10)
@@ -70,12 +71,13 @@ def jeu():
             x = i * LARGEUR_BRIQUE + 60
             y = j * HAUTEUR_BRIQUE + 50
             couleur = random.choice([ROUGE, VERT, BLEU])
-            if random.random() < 0.5:  # 10% de chance de créer une brique bonus
+            if random.random() < 0.1:  # 10% de chance de créer une brique bonus
                 brique = Brique_x3(x, y, couleur)
             else:
                 brique = Brique(x, y, couleur)
             brique.dessine(calque_briques)
             briques.append(brique)
+
 
 
     pygame.display.flip()
@@ -95,18 +97,19 @@ def jeu():
             if evenement.type == QUIT:
                 break
 
-        # Déplacement de la balle
-        balle.deplace()
+        # Mettre à jour la position et l'état de chaque balle
+        i=0
+        while i < len(liste_balles):
+            liste_balles[i].deplace()
+            liste_balles[i].rebondit_sur_murs()
+            liste_balles[i].rebondit_sur_raquette(raquette)
+            # Supprimer les balles sorties de la fenêtre
+            if liste_balles[i].est_sortie():
+                liste_balles.pop(i)
+                i -= 1
+            i+=1
 
-        # Rebond de la balle sur les murs
-        balle.rebondit_sur_murs()
 
-        # Rebond de la balle sur la raquette
-        balle.rebondit_sur_raquette(raquette)
-
-        # Vérification si la balle est sortie
-        if balle.est_sortie():
-            break
 
         # Déplacement de la raquette
         touches = pygame.key.get_pressed()
@@ -115,19 +118,31 @@ def jeu():
         elif touches[K_RIGHT]:
             raquette.deplace("droite")
 
-
-
-        balle.dessine(fenetre)
+        for balle in liste_balles:
+            balle.dessine(fenetre)
         raquette.dessine(fenetre)
 
-        for brique in briques:
-            if brique.est_en_collision_avec(balle):
-                briques.remove(brique)
-                # Effacer la brique du calque
-                brique_rect = brique.rect.inflate(2, 2)  # Ajouter une marge pour éviter les artefacts
-                calque_briques.fill((0, 0, 0, 0), brique_rect)
+        i=0
+        while i<len(briques):
+            b = True
+            for balle in liste_balles:
+                if i>=0 and b == True:
+                    collision,bonus =  briques[i].est_en_collision_avec(balle)
+                    if collision:
+                        b = False #plus de brique donc plus de collision possible
+                        # Effacer la brique du calque
+                        brique_rect = briques[i].rect.inflate(2, 2)  # Ajouter une marge pour éviter les artefacts
+                        calque_briques.fill((0, 0, 0, 0), brique_rect)
+                        briques.pop(i)
+                        i -= 1
+                        if bonus == 'x3':
+                            liste_balles.extend([Balle(balle.x,balle.y, vx, vy),Balle(balle.x,balle.y, vx, -vy)])
+            i += 1
+            print(i,len(briques))
 
         pygame.display.flip()
+        if len(liste_balles) == 0:
+            break
 
 #fenêtre d'accueil
 def acceuil():
