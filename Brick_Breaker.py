@@ -39,6 +39,10 @@ def jeu():
     fenetre = pygame.display.set_mode((LARGEUR_FENETRE, HAUTEUR_FENETRE),pygame.FULLSCREEN | pygame.NOFRAME)
     pygame.display.set_caption("Casse-briques")
 
+    # Création d'un calque pour les briques
+    calque_briques = pygame.Surface((LARGEUR_FENETRE, HAUTEUR_FENETRE), pygame.SRCALPHA, 32)
+    calque_briques.fill((0, 0, 0, 0))  # Remplir le calque avec une couleur transparente
+
     # Compte à rebours avant le début de la partie
     font = pygame.font.SysFont(None, 100)
     temps_restant = 3
@@ -57,6 +61,8 @@ def jeu():
     # Création de la raquette
     raquette = Raquette(LARGEUR_FENETRE / 2 - LARGEUR_RAQUETTE / 2, HAUTEUR_FENETRE - HAUTEUR_RAQUETTE - 10)
 
+
+
     # Création des briques
     briques = []
     for i in range(8):
@@ -64,17 +70,26 @@ def jeu():
             x = i * LARGEUR_BRIQUE + 60
             y = j * HAUTEUR_BRIQUE + 50
             couleur = random.choice([ROUGE, VERT, BLEU])
-            if random.random() < 0.5:  # 50% de chance de créer une brique bonus
+            if random.random() < 0.5:  # 10% de chance de créer une brique bonus
                 brique = Brique_x3(x, y, couleur)
             else:
                 brique = Brique(x, y, couleur)
-            briques.append(Brique(x, y, couleur))
+            brique.dessine(calque_briques)
+            briques.append(brique)
 
 
+    pygame.display.flip()
 
 
     # Boucle principale
     while True:
+
+        # Affichage
+        fenetre.fill(NOIR)
+
+        # Copier le calque des briques sur la surface principale
+        fenetre.blit(calque_briques, (0, 0))
+
         # Gestion des événements
         for evenement in pygame.event.get():
             if evenement.type == QUIT:
@@ -100,8 +115,7 @@ def jeu():
         elif touches[K_RIGHT]:
             raquette.deplace("droite")
 
-        # Affichage
-        fenetre.fill(NOIR)
+
 
         balle.dessine(fenetre)
         raquette.dessine(fenetre)
@@ -109,8 +123,9 @@ def jeu():
         for brique in briques:
             if brique.est_en_collision_avec(balle):
                 briques.remove(brique)
-            else:
-                brique.dessine(fenetre)
+                # Effacer la brique du calque
+                brique_rect = brique.rect.inflate(2, 2)  # Ajouter une marge pour éviter les artefacts
+                calque_briques.fill((0, 0, 0, 0), brique_rect)
 
         pygame.display.flip()
 
