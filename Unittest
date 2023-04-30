@@ -1,0 +1,81 @@
+# test_briques.py
+
+import unittest
+from balle import Balle
+from brique import Brique, Brique_x3
+from raquette import Raquette
+from balle import Balle
+
+class TestBrique(unittest.TestCase):
+    def test_collision_verticale(self):
+        brique = Brique(50, 50, (255, 255, 255))
+        balle = Balle(55, 45, 5, 5)
+        self.assertTrue(brique.est_en_collision_avec(balle)[0])
+
+    def test_collision_horizontale(self):
+        brique = Brique(50, 50, (255, 255, 255))
+        balle = Balle(40, 55, 5, 5)
+        self.assertTrue(brique.est_en_collision_avec(balle)[0])
+
+    def test_pas_de_collision(self):
+        brique = Brique(50, 50, (255, 255, 255))
+        balle = Balle(10, 10, 5, 5)
+        self.assertFalse(brique.est_en_collision_avec(balle)[0])
+
+
+class TestBrique_x3(unittest.TestCase):
+    def test_collision_bonus(self):
+        brique = Brique_x3(50, 50, (255, 255, 255))
+        balle = Balle(40, 55, 5, 5)
+        collision, bonus = brique.est_en_collision_avec(balle)
+        self.assertTrue(collision)
+        self.assertEqual(bonus, 'x3')
+
+
+class TestRaquette(unittest.TestCase):
+    def test_deplace_gauche(self):
+        raquette = Raquette(100, 450)
+        raquette.deplace("gauche")
+        self.assertEqual(raquette.x, 99)
+
+    def test_deplace_droite(self):
+        raquette = Raquette(100, 450)
+        raquette.deplace("droite")
+        self.assertEqual(raquette.x, 101)
+
+    def test_deplace_gauche_limite(self):
+        raquette = Raquette(0, 450)
+        raquette.deplace("gauche")
+        self.assertEqual(raquette.x, 0)
+
+    def test_deplace_droite_limite(self):
+        raquette = Raquette(420, 450) #420 = largeur_fenêtre - largeur_raquette
+        raquette.deplace("droite")
+        self.assertEqual(raquette.x, 420)
+
+class TestBalle(unittest.TestCase):
+    def test_deplace(self):
+        balle = Balle(100, 100, 5, 5)
+        balle.deplace()
+        self.assertEqual(balle.x, 105)
+        self.assertEqual(balle.y, 105)
+
+    def test_rebondit_sur_murs(self):
+        balle = Balle(495, 100, 5, 5)
+        balle.rebondit_sur_murs()
+        self.assertEqual(balle.vx, -5)
+
+    def test_rebondit_sur_raquette(self):
+        balle = Balle(100, 440, 5, 5)
+        raquette = Raquette(90, 450)
+        balle.rebondit_sur_raquette(raquette)
+        self.assertEqual(balle.vy, -5)
+
+    def test_est_sortie(self):
+        balle = Balle(100, 510, 5, 5)
+        self.assertTrue(balle.est_sortie())
+
+
+if __name__ == '__main__':
+    unittest.main()
+
