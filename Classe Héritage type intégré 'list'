@@ -1,0 +1,18 @@
+from brique import *
+
+class Liste_b(list):
+    def __init__(self,LARGEUR_FENETRE,HAUTEUR_FENETRE,LARGEUR_BRIQUE,HAUTEUR_BRIQUE):
+        super().__init__()
+        self.hf = HAUTEUR_FENETRE
+        self.lf = LARGEUR_FENETRE
+        self.hb = HAUTEUR_BRIQUE
+        self.lb = LARGEUR_BRIQUE
+
+
+    def calcul_brique(self):
+        i=1
+        while self.lf - i*self.lb > 0:
+            i+=1
+            nb_brique = i-1
+        esp = self.lf - nb_brique*self.lb
+        return(nb_brique,esp)
