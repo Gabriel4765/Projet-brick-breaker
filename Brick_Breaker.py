@@ -5,6 +5,7 @@ from balle import Balle
 from raquette import Raquette
 from brique import Brique
 from brique import Brique_x3
+from Liste import Liste_b
 
 # Couleurs
 BLANC = (255, 255, 255)
@@ -31,9 +32,16 @@ HAUTEUR_RAQUETTE = 10
 LARGEUR_BRIQUE = 50
 HAUTEUR_BRIQUE = 20
 
+#espaces fenêtre/briques
+esp_hauteur = 50
+
 # Fonction principale
 def jeu():
     pygame.init()
+    pygame.mixer.init()
+    music = pygame.mixer.music.load(r'C:\Users\Mon PC\Desktop\Projet Informatique\Projet CB - Copie/funky town low quality.mp3')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.5)
 
     # Création de la fenêtre
     fenetre = pygame.display.set_mode((LARGEUR_FENETRE, HAUTEUR_FENETRE),pygame.FULLSCREEN | pygame.NOFRAME)
@@ -65,11 +73,13 @@ def jeu():
 
 
     # Création des briques
-    briques = []
-    for i in range(8):
+    briques = Liste_b(LARGEUR_FENETRE,HAUTEUR_FENETRE,LARGEUR_BRIQUE,HAUTEUR_BRIQUE)
+    nb_brique_ligne, esp_cote = briques.calcul_brique()
+
+    for i in range(nb_brique_ligne):
         for j in range(4):
-            x = i * LARGEUR_BRIQUE + 60
-            y = j * HAUTEUR_BRIQUE + 50
+            x = i * LARGEUR_BRIQUE + esp_cote
+            y = j * HAUTEUR_BRIQUE + esp_hauteur
             couleur = random.choice([ROUGE, VERT, BLEU])
             if random.random() < 0.1:  # 10% de chance de créer une brique bonus
                 brique = Brique_x3(x, y, couleur)
@@ -136,13 +146,20 @@ def jeu():
                         briques.pop(i)
                         i -= 1
                         if bonus == 'x3':
-                            liste_balles.extend([Balle(balle.x,balle.y, vx, vy),Balle(balle.x,balle.y, vx, -vy)])
+                            liste_balles.extend([Balle(balle.x,balle.y, vx, vy),Balle(balle.x,balle.y, 1.2*vx, -1.2*vy)])
             i += 1
-            print(i,len(briques))
+
 
         pygame.display.flip()
         if len(liste_balles) == 0:
-            break
+            pygame.mixer.music.stop()
+            return('défaite')
+        if len(briques) == 0:
+            pygame.mixer.music.stop()
+            music = pygame.mixer.music.load(r'C:\Users\Mon PC\Desktop\Projet Informatique\Projet CB - Copie/WOW.mp3')
+            pygame.mixer.music.play(0)
+            pygame.mixer.music.set_volume(0.5)
+            return ('victoire')
 
 #fenêtre d'accueil
 def acceuil():
@@ -223,6 +240,9 @@ def defaite():
 if __name__ == "__main__":
     j = acceuil()
     while j == 1:
-        jeu()
-        j = defaite()
+        etat = jeu()
+        if etat == 'defaite':
+            j = defaite()
+        else :
+            j = victoire()
 
