@@ -1,18 +1,75 @@
 from brique import *
+import pygame
+from pygame.locals import *
+BLEU = (0, 0, 255)
+ROUGE = (255, 0, 0)
+VERT = (0, 255, 0)
 
 class Liste_b(list):
-    def __init__(self,LARGEUR_FENETRE,HAUTEUR_FENETRE,LARGEUR_BRIQUE,HAUTEUR_BRIQUE):
+    def __init__(self,Lf,Hf,Lb,Hb):
         super().__init__()
-        self.hf = HAUTEUR_FENETRE
-        self.lf = LARGEUR_FENETRE
-        self.hb = HAUTEUR_BRIQUE
-        self.lb = LARGEUR_BRIQUE
+        self.hf = Hf
+        self.lf = Lf
+        self.hb = Hb
+        self.lb = Lb
+        self.temps_derniere_descente = pygame.time.get_ticks()
 
 
     def calcul_brique(self):
         i=1
         while self.lf - i*self.lb > 0:
             i+=1
-            nb_brique = i-1
+        nb_brique = i-2 #pour plus d'espace
         esp = self.lf - nb_brique*self.lb
-        return(nb_brique,esp)
+        return(nb_brique,esp/2)
+
+    def ajout_ligne(self,i):
+        nb_brique, esp = self.calcul_brique()
+        for j in range(nb_brique):
+            x = j * self.lb + esp
+            y = i * self.hb
+            couleur = random.choice([ROUGE, VERT, BLEU])
+            if random.random() < 0.05:  # 10% de chance de créer une brique bonus
+                brique = Brique_x2(x, y, self.lb,self.hb, couleur)
+            elif random.random() < 0.1:  # 10% de chance de créer une brique bonus
+                brique = Brique_3PV(x, y, self.lb,self.hb, couleur)
+            elif random.random() <0.15:
+                brique = Brique_Raquette(x, y, self.lb, self.hb, couleur)
+            else:
+                brique = Brique(x, y,self.lb,self.hb, couleur)
+            self.append(brique)
+
+    """def deplace(self,calque):
+        nouveau_calque = calque.copy()  # Copie du calque original
+        for brique in reversed(self):
+            # Effacer la brique du nouveau calque
+            brique_rect = brique.rect.inflate(2,2)  # Ajouter une marge pour éviter les artefacts
+            nouveau_calque.fill((0, 0, 0, 0), brique_rect)
+
+            # Déplacer la brique vers le bas
+            brique.y += 5
+            brique.rect.y = brique.y  # Mettre à jour la position y du rect de la brique
+
+            # Dessiner la brique déplacée sur le nouveau calque
+            brique.dessine(nouveau_calque)
+
+        return nouveau_calque"""
+
+    def descendre_briques(self, calque_briques):
+        # Effacer le calque précédent
+        calque_briques.fill((0, 0, 0, 0))
+
+        nb_brique_ligne, esp = self.calcul_brique()
+        # Déplacer toutes les briques vers le bas
+        for brique in self:
+            brique.y += self.hb
+            brique.rect.y += self.hb
+
+        # Générer une nouvelle ligne de briques en position y = -HAUTEUR_BRIQUE
+        self.ajout_ligne(-1)
+        # Redessiner toutes les briques
+        for brique in self:
+            brique.dessine(calque_briques)
+
+
+
