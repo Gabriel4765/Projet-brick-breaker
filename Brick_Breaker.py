@@ -3,8 +3,7 @@ from pygame.locals import *
 import random
 from balle import Balle
 from raquette import Raquette
-from brique import Brique
-from brique import Brique_x3
+from brique import *
 from Liste import Liste_b
 
 # Couleurs
@@ -33,15 +32,16 @@ LARGEUR_BRIQUE = 50
 HAUTEUR_BRIQUE = 20
 
 #espaces fenêtre/briques
-esp_hauteur = 50
+esp_hauteur = 30
 
 # Fonction principale
 def jeu():
     pygame.init()
-    pygame.mixer.init()
-    music = pygame.mixer.music.load(r'C:\Users\Mon PC\Desktop\Projet Informatique\Projet CB - Copie/funky town low quality.mp3')
+
+    """pygame.mixer.init()
+    music = pygame.mixer.music.load(r'C:\Users\Mon PC\Desktop\Projet Informatique\Projet CB/funky town low quality.mp3')
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.set_volume(0.5)"""
 
     # Création de la fenêtre
     fenetre = pygame.display.set_mode((LARGEUR_FENETRE, HAUTEUR_FENETRE),pygame.FULLSCREEN | pygame.NOFRAME)
@@ -68,7 +68,7 @@ def jeu():
     liste_balles = [balle_ini]
 
     # Création de la raquette
-    raquette = Raquette(LARGEUR_FENETRE / 2 - LARGEUR_RAQUETTE / 2, HAUTEUR_FENETRE - HAUTEUR_RAQUETTE - 10)
+    raquette = Raquette(LARGEUR_FENETRE / 2 - LARGEUR_RAQUETTE / 2, HAUTEUR_FENETRE - HAUTEUR_RAQUETTE - 10,LARGEUR_RAQUETTE,HAUTEUR_RAQUETTE)
 
 
 
@@ -77,16 +77,10 @@ def jeu():
     nb_brique_ligne, esp_cote = briques.calcul_brique()
 
     for i in range(nb_brique_ligne):
-        for j in range(4):
-            x = i * LARGEUR_BRIQUE + esp_cote
-            y = j * HAUTEUR_BRIQUE + esp_hauteur
-            couleur = random.choice([ROUGE, VERT, BLEU])
-            if random.random() < 0.1:  # 10% de chance de créer une brique bonus
-                brique = Brique_x3(x, y, couleur)
-            else:
-                brique = Brique(x, y, couleur)
+        briques.ajout_ligne(i)
+        for brique in briques:
             brique.dessine(calque_briques)
-            briques.append(brique)
+
 
 
 
@@ -95,6 +89,8 @@ def jeu():
 
     # Boucle principale
     while True:
+
+
 
         # Affichage
         fenetre.fill(NOIR)
@@ -139,24 +135,27 @@ def jeu():
                 if i>=0 and b == True:
                     collision,bonus =  briques[i].est_en_collision_avec(balle)
                     if collision:
-                        b = False #plus de brique donc plus de collision possible
-                        # Effacer la brique du calque
-                        brique_rect = briques[i].rect.inflate(2, 2)  # Ajouter une marge pour éviter les artefacts
-                        calque_briques.fill((0, 0, 0, 0), brique_rect)
-                        briques.pop(i)
-                        i -= 1
-                        if bonus == 'x3':
-                            liste_balles.extend([Balle(balle.x,balle.y, vx, vy),Balle(balle.x,balle.y, 1.2*vx, -1.2*vy)])
+                        if bonus == '3pv' and briques[i].vie != 0:
+                            briques[i].dessine(calque_briques)
+                        else:
+                            b = False #plus de brique donc plus de collision possible
+                            # Effacer la brique du calque
+                            brique_rect = briques[i].rect.inflate(2, 2)  # Ajouter une marge pour éviter les artefacts
+                            calque_briques.fill((0, 0, 0, 0), brique_rect)
+                            if bonus == 'x2':
+                                liste_balles.extend([briques[i].generer(balle)])
+                            briques.pop(i)
+                            i -= 1
             i += 1
 
 
         pygame.display.flip()
         if len(liste_balles) == 0:
-            pygame.mixer.music.stop()
+            """pygame.mixer.music.stop()"""
             return('défaite')
         if len(briques) == 0:
-            pygame.mixer.music.stop()
-            music = pygame.mixer.music.load(r'C:\Users\Mon PC\Desktop\Projet Informatique\Projet CB - Copie/WOW.mp3')
+            """pygame.mixer.music.stop()"""
+            music = pygame.mixer.music.load(r'C:\Users\Mon PC\Desktop\Projet Informatique\Projet CB/WOW.mp3')
             pygame.mixer.music.play(0)
             pygame.mixer.music.set_volume(0.5)
             return ('victoire')
@@ -204,6 +203,38 @@ def option():
     pygame.init()
     ecran = pygame.display.set_mode((LARGEUR_FENETRE, HAUTEUR_FENETRE), pygame.FULLSCREEN | pygame.NOFRAME)
 
+def victoire():
+    pygame.init()
+    ecran = pygame.display.set_mode((LARGEUR_FENETRE, HAUTEUR_FENETRE), pygame.FULLSCREEN | pygame.NOFRAME)
+
+    font = pygame.font.SysFont(None, 100)
+    texte = font.render('Victoire', True, (255, 0, 0))
+    texte_rect = texte.get_rect(center=(250, 250))
+    bouton_rejouer = pygame.Rect(150, 100, 100, 50)
+    bouton_quitter = pygame.Rect(250, 100, 100, 50)
+    font_bouton = pygame.font.SysFont('Arial', 20)
+    texte_rejouer = font_bouton.render('Rejouer', True, (255, 0, 0))
+    texte_quitter = font_bouton.render('Quitter', True, (255, 0, 0))
+    pygame.draw.rect(ecran, (255, 255, 255), bouton_rejouer)
+    pygame.draw.rect(ecran, (255, 255, 255), bouton_quitter)
+    ecran.blit(texte, texte_rect)
+    ecran.blit(texte_rejouer, (175, 115))
+    ecran.blit(texte_quitter, (280, 115))
+    pygame.display.flip()
+    while True:
+        for evenement in pygame.event.get():
+            if evenement.type == QUIT:
+                pygame.quit()
+                break
+            elif evenement.type == MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if bouton_rejouer.collidepoint(pos):
+                    return (1)
+                elif bouton_quitter.collidepoint(pos):
+                    pygame.quit()
+                    return (0)
+
+
 def defaite():
     pygame.init()
     ecran = pygame.display.set_mode((LARGEUR_FENETRE, HAUTEUR_FENETRE),pygame.FULLSCREEN | pygame.NOFRAME)
@@ -241,7 +272,7 @@ if __name__ == "__main__":
     j = acceuil()
     while j == 1:
         etat = jeu()
-        if etat == 'defaite':
+        if etat == 'défaite':
             j = defaite()
         else :
             j = victoire()
